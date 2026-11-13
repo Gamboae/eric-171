@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clasificación Crediticia (SBS) | Exposición y Juego en Clase</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            sbs: {
+              950: '#0f172a',
+              900: '#1e3a8a',
+              800: '#1d4ed8',
+              700: '#2563eb',
+              100: '#dbeafe',
+              50: '#f8fafc',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    .slide-panel {
+      display: none;
+      animation: slideEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .slide-panel.active {
+      display: block;
+    }
+
+    @keyframes slideEnter {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes popBounce {
+      0% { transform: scale(0.85); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    .winner-pop {
+      animation: popBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Confeti ligero en CSS puro */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -15px;
+      z-index: 60;
+      pointer-events: none;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(105vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Estilos de impresión */
+    @media print {
+      .no-print { display: none !important; }
+      .slide-panel {
+        display: block !important;
+        page-break-after: always;
+        margin-bottom: 2rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+  <header class="bg-[#0f172a] text-white shadow-lg sticky top-0 z-40 no-print">
+    <!-- Barra de progreso -->
+    <div class="w-full h-1.5 bg-slate-900">
+      <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 transition-all duration-300" style="width: 20%;"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
+        <!-- Título sencillo -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#1e3a8a] border border-blue-400/30 flex items-center justify-center font-extrabold text-white text-base shadow">
+              SBS
+            </div>
+            <div>
+              <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white">Clasificación Crediticia (SBS)</h1>
+              <p class="text-xs text-slate-300">Guía visual sencilla para exponer en clase • Semana 10</p>
+            </div>
+          </div>
+
+          <div class="flex xl:hidden items-center gap-2">
+            <span id="slideCounterTopMobile" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-sky-300 border border-slate-700">1 / 5</span>
+            <button onclick="toggleFullscreen()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" title="Pantalla completa">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Pestañas de Navegación -->
+        <nav class="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0" aria-label="Diapositivas">
+          <button onclick="goToSlide(0)" id="tab-0" class="nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition bg-white text-[#0f172a] shadow">
+            1. Tabla de Categorías
+          </button>
+          <button onclick="goToSlide(1)" id="tab-1" class="nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-slate-800/90 text-slate-200 hover:bg-slate-700">
+            2. Clasificación por Perfil
+          </button>
+          <button onclick="goToSlide(2)" id="tab-2" class="nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-slate-800/90 text-slate-200 hover:bg-slate-700">
+            3. Consolidado (Rosa Delgado)
+          </button>
+          <button onclick="goToSlide(3)" id="tab-3" class="nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-slate-800/90 text-slate-200 hover:bg-slate-700">
+            4. Info Adicional (Evaluación)
+          </button>
+          <button onclick="goToSlide(4)" id="tab-4" class="nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition bg-amber-500/20 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30">
+            🎲 5. Juego al Azar (40 Alumnos)
+          </button>
+        </nav>
+
+        <!-- Contador y Proyector Desktop -->
+        <div class="hidden xl:flex items-center gap-2.5">
+          <span id="slideCounterTop" class="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-slate-800 text-sky-300 border border-slate-700">
+            1 / 5
+          </span>
+          <button onclick="toggleFullscreen()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1e3a8a] hover:bg-blue-700 text-xs font-semibold text-white transition" title="Pantalla completa (Tecla F)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            <span>Proyectar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+    <!-- ======================================================================= -->
+    <!-- DIAPOSITIVA 1: 1. TABLA DE CATEGORÍAS (HOJA: TABLA)                     -->
+    <!-- ======================================================================= -->
+    <section id="slide-0" class="slide-panel active space-y-6">
+      <div class="bg-gradient-to-r from-[#0f172a] to-[#1e3a8a] rounded-2xl p-6 sm:p-8 text-white shadow-md">
+        <div class="max-w-4xl space-y-2.5">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/15 text-sky-200">
+            Diapositiva 1 • Reglas Básicas de la SBS
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight">
+            ¿Cómo califican los bancos tu puntualidad de pago?
+          </h2>
+          <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+            En palabras simples: la <strong>SBS</strong> pone una "nota" del <strong>0 al 4</strong> a toda persona o empresa que tiene un crédito. Mientras más días te demores en pagar, peor es tu nota. Además, <strong>los plazos de tolerancia cambian según el tipo de cliente</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- TABLA 1: CATEGORÍAS Y RANGOS -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900">Las 5 Categorías de Riesgo Crediticio</h3>
+            <p class="text-xs text-slate-500">De mejor comportamiento (Código 0) a mayor riesgo de no pago (Código 4)</p>
+          </div>
+          <span class="text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-[#1e3a8a] border border-blue-200">
+            Fuente: Tabla 1 del Excel SBS
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#0f172a] text-white text-xs sm:text-sm uppercase tracking-wider">
+                <th class="py-3.5 px-4 w-56">Categoría (Código)</th>
+                <th class="py-3.5 px-4">No minoristas<br><span class="text-[11px] font-normal text-sky-200 normal-case">(Empresas medianas, grandes y corporativas)</span></th>
+                <th class="py-3.5 px-4">Minoristas<br><span class="text-[11px] font-normal text-sky-200 normal-case">(Personas, tarjetas, micro y pequeña empresa)</span></th>
+                <th class="py-3.5 px-4">Hipotecario<br><span class="text-[11px] font-normal text-sky-200 normal-case">(Crédito para comprar vivienda)</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-sm">
+              <tr class="hover:bg-emerald-50/40 transition">
+                <td class="py-3.5 px-4 font-bold">
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-[#059669] border border-emerald-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#059669]"></span>
+                    Normal (Código 0)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700">Cumple puntualmente; <strong>lo principal es su capacidad de pago (flujo de caja)</strong>.</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">0 a 8 días de atraso</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">0 a 30 días de atraso</td>
+              </tr>
+              <tr class="hover:bg-amber-50/40 transition">
+                <td class="py-3.5 px-4 font-bold">
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-[#d97706] border border-amber-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#d97706]"></span>
+                    CPP (Código 1)
+                  </span>
+                  <div class="text-[11px] font-normal text-slate-500 mt-1">Con Problemas Potenciales</div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700"><strong>2 o más atrasos &gt; 15 días</strong> en 6 meses, sin pasar de 60 días.</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">9 a 30 días de atraso</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">31 a 60 días de atraso</td>
+              </tr>
+              <tr class="hover:bg-orange-50/40 transition">
+                <td class="py-3.5 px-4 font-bold">
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-orange-100 text-orange-700 border border-orange-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-600"></span>
+                    Deficiente (Código 2)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">Más de 60 hasta 120 días</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">31 a 60 días de atraso</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">61 a 120 días de atraso</td>
+              </tr>
+              <tr class="hover:bg-red-50/40 transition">
+                <td class="py-3.5 px-4 font-bold">
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-[#dc2626] border border-red-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#dc2626]"></span>
+                    Dudoso (Código 3)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">Más de 120 hasta 365 días</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">61 a 120 días de atraso</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">121 a 365 días de atraso</td>
+              </tr>
+              <tr class="hover:bg-rose-50/50 transition">
+                <td class="py-3.5 px-4 font-bold">
+                  <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-slate-900 text-rose-200 border border-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    Pérdida (Código 4)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">Más de 365 días</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">Más de 120 días</td>
+                <td class="py-3.5 px-4 text-slate-700 font-semibold">Más de 365 días</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SIMULADOR INTERACTIVO "PRUEBA TÚ MISMO" -->
+      <div class="bg-[#0f172a] rounded-2xl p-6 text-white shadow-md border border-slate-700">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-3 flex-1">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase">
+              <span>⚡ Prueba tú mismo</span>
+            </div>
+            <h3 class="text-xl font-extrabold">Simulador rápido de clasificación</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="simCreditType" class="block text-xs font-semibold text-slate-300 mb-1">1. Elige el tipo de crédito:</label>
+                <select id="simCreditType" onchange="runSimulator()" class="w-full rounded-xl bg-slate-800 border border-slate-600 text-white text-sm px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-400">
+                  <option value="Corporativo">Corporativo</option>
+                  <option value="Gran empresa">Gran empresa</option>
+                  <option value="Mediana empresa">Mediana empresa</option>
+                  <option value="Pequeña empresa">Pequeña empresa</option>
+                  <option value="Microempresa" selected>Microempresa</option>
+                  <option value="Consumo revolvente">Consumo revolvente (Tarjeta)</option>
+                  <option value="Consumo no revolvente">Consumo no revolvente (Préstamo)</option>
+                  <option value="Hipotecario para vivienda">Hipotecario para vivienda</option>
+                </select>
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-300 mb-1">
+                  <label for="simDays">2. Días de atraso:</label>
+                  <span id="simDaysBadge" class="font-mono font-bold text-amber-300">45 días</span>
+                </div>
+                <input type="range" id="simDaysSlider" min="0" max="400" value="45" oninput="syncSimInputs('slider')" class="w-full accent-sky-400 cursor-pointer mb-1.5" />
+                <input type="number" id="simDays" min="0" max="1000" value="45" oninput="syncSimInputs('number')" class="w-full rounded-xl bg-slate-800 border border-slate-600 text-white font-mono font-bold text-sm px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultado instantáneo -->
+          <div class="lg:w-96 bg-white/10 rounded-2xl p-5 border border-white/15 space-y-3">
+            <div class="flex items-center justify-between text-xs text-slate-300">
+              <span>Grupo asignado:</span>
+              <strong id="simGroupOut" class="text-white font-bold text-sm">Minorista</strong>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-300">Resultado SBS:</span>
+              <div id="simCatOut" class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-extrabold bg-orange-500 text-white">Deficiente (2)</span>
+              </div>
+            </div>
+            <p id="simSimpleExplain" class="text-xs text-sky-200 bg-slate-900/60 p-3 rounded-xl leading-relaxed">
+              En créditos Minoristas, de 31 a 60 días de atraso corresponde la categoría Deficiente (Código 2).
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- DIAPOSITIVA 2: 2. CLASIFICACIÓN POR PERFIL (HOJA: CLASIFICACION)        -->
+    <!-- ======================================================================= -->
+    <section id="slide-1" class="slide-panel space-y-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#1e3a8a]">Diapositiva 2 • Casos Prácticos por Deuda</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">¿Cómo clasifica el Excel cada obligación?</h2>
+        <p class="text-slate-600 text-sm sm:text-base mt-1">
+          Antes de ver al cliente completo, el banco evalúa <strong>cada préstamo por separado</strong> siguiendo 3 pasos:
+        </p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#0f172a] text-white text-xs uppercase tracking-wider">
+                <th class="py-3.5 px-4">Perfil / Cliente</th>
+                <th class="py-3.5 px-4">Obligación</th>
+                <th class="py-3.5 px-4">Tipo de crédito</th>
+                <th class="py-3.5 px-4">Grupo</th>
+                <th class="py-3.5 px-4 text-center">Días atraso</th>
+                <th class="py-3.5 px-4 text-center">Categoría (Código)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-sm">
+              <tr class="hover:bg-slate-50">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-[#1e3a8a] uppercase">Perfil 1</span><div class="font-bold text-slate-900">Constructora Andina S.A.C.</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Crédito comercial</td>
+                <td class="py-4 px-4 text-slate-700">Gran empresa</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-100 text-indigo-800">No minorista</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">5 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-[#059669] border border-emerald-300">Normal (0)</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-[#1e3a8a] uppercase">Perfil 2</span><div class="font-bold text-slate-900">Bodega La Esperanza E.I.R.L.</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Crédito MES</td>
+                <td class="py-4 px-4 text-slate-700">Microempresa</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">Minorista</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">45 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-orange-100 text-orange-700 border border-orange-300">Deficiente (2)</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-[#1e3a8a] uppercase">Perfil 3</span><div class="font-bold text-slate-900">Carlos Injante Paredes</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Tarjeta de crédito</td>
+                <td class="py-4 px-4 text-slate-700">Consumo revolvente</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">Minorista</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">95 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-[#dc2626] border border-red-300">Dudoso (3)</span></td>
+              </tr>
+              <tr class="bg-blue-50/30 hover:bg-blue-50/70">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-indigo-700 uppercase">Perfil 4 (Deuda 1)</span><div class="font-bold text-slate-900">Rosa Delgado Huamán</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Tarjeta de crédito</td>
+                <td class="py-4 px-4 text-slate-700">Consumo revolvente</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">Minorista</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">0 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-[#059669] border border-emerald-300">Normal (0)</span></td>
+              </tr>
+              <tr class="bg-blue-50/30 hover:bg-blue-50/70">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-indigo-700 uppercase">Perfil 4 (Deuda 2)</span><div class="font-bold text-slate-900">Rosa Delgado Huamán</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Préstamo personal</td>
+                <td class="py-4 px-4 text-slate-700">Consumo no revolvente</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-100 text-sky-800">Minorista</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">12 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-[#d97706] border border-amber-300">CPP (1)</span></td>
+              </tr>
+              <tr class="bg-blue-50/30 hover:bg-blue-50/70">
+                <td class="py-4 px-4"><span class="text-xs font-extrabold text-indigo-700 uppercase">Perfil 4 (Deuda 3)</span><div class="font-bold text-slate-900">Rosa Delgado Huamán</div></td>
+                <td class="py-4 px-4 text-slate-700 font-medium">Crédito hipotecario</td>
+                <td class="py-4 px-4 text-slate-700">Hipotecario para vivienda</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-xs font-bold bg-teal-100 text-teal-800">Hipotecario</span></td>
+                <td class="py-4 px-4 text-center font-mono font-bold text-slate-800">150 días</td>
+                <td class="py-4 px-4 text-center"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-[#dc2626] border border-red-300">Dudoso (3)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- DIAPOSITIVA 3: 3. CONSOLIDADO (ROSA DELGADO) (HOJA: CONSOLIDADO)        -->
+    <!-- ======================================================================= -->
+    <section id="slide-2" class="slide-panel space-y-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#1e3a8a]">Diapositiva 3 • Caso Especial de Arrastre</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Consolidado del Perfil 4: Rosa Delgado Huamán</h2>
+        <p class="text-slate-600 text-sm sm:text-base mt-1">
+          ¿Qué pasa cuando una misma persona tiene <strong>3 créditos distintos</strong> con calificaciones diferentes?
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div class="lg:col-span-7 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between space-y-4">
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Las 3 obligaciones de Rosa Delgado:</h3>
+          <div class="space-y-3">
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between gap-3">
+              <div><div class="font-bold text-slate-900">1. Tarjeta de crédito</div><div class="text-xs text-slate-600">0 días de atraso</div></div>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-[#059669] border border-emerald-300">Normal (0)</span>
+            </div>
+            <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 flex items-center justify-between gap-3">
+              <div><div class="font-bold text-slate-900">2. Préstamo personal</div><div class="text-xs text-slate-600">12 días de atraso</div></div>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-[#d97706] border border-amber-300">CPP (1)</span>
+            </div>
+            <div class="p-4 rounded-xl bg-red-50 border-2 border-red-300 flex items-center justify-between gap-3">
+              <div><div class="font-bold text-red-950">3. Crédito hipotecario</div><div class="text-xs text-red-800">150 días de atraso</div></div>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-[#dc2626] text-white">Dudoso (3)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-gradient-to-br from-[#dc2626] to-red-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col justify-between">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white">Resultado Final SBS</span>
+            <div class="mt-4 flex items-center justify-between border-b border-white/20 pb-4">
+              <span class="text-sm font-medium text-red-100">Peor código encontrado:</span>
+              <span class="text-5xl font-mono font-black text-white">3</span>
+            </div>
+            <div class="mt-5">
+              <div class="text-xs uppercase tracking-wider text-red-200 font-bold">Clasificación Final del Deudor</div>
+              <div class="text-4xl sm:text-5xl font-black tracking-tight mt-1">DUDOSO</div>
+            </div>
+          </div>
+          <p class="mt-6 text-xs text-red-100 bg-black/25 p-3.5 rounded-xl leading-relaxed">
+            Su crédito hipotecario arrastra a los demás créditos. Para todo el sistema financiero, Rosa es un cliente <strong>Dudoso (3)</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- DIAPOSITIVA 4: 4. INFO ADICIONAL (EVALUACIÓN) (HOJA: INFO ADICIONAL)    -->
+    <!-- ======================================================================= -->
+    <section id="slide-3" class="slide-panel space-y-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#1e3a8a]">Diapositiva 4 • Antes de aprobar un nuevo crédito</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">¿Qué más revisa el analista? (16 puntos clave)</h2>
+          </div>
+          <div class="shrink-0 flex items-center gap-2">
+            <span id="infoCounterBadge" class="px-3.5 py-1.5 rounded-xl bg-[#0f172a] text-white text-xs font-bold">Mostrando 16 de 16 puntos</span>
+            <button onclick="resetInfoFilters()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">Ver todos</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+          <div>
+            <span class="block text-xs font-bold uppercase text-slate-500 mb-2">Filtrar por Perfil:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setProfileFilter('ALL')" data-val="ALL" class="prof-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e3a8a] text-white transition">Todos</button>
+              <button onclick="setProfileFilter('Perfil 1')" data-val="Perfil 1" class="prof-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">1. Constructora</button>
+              <button onclick="setProfileFilter('Perfil 2')" data-val="Perfil 2" class="prof-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">2. Bodega</button>
+              <button onclick="setProfileFilter('Perfil 3')" data-val="Perfil 3" class="prof-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">3. Carlos</button>
+              <button onclick="setProfileFilter('Perfil 4')" data-val="Perfil 4" class="prof-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition">4. Rosa</button>
+            </div>
+          </div>
+          <div>
+            <span class="block text-xs font-bold uppercase text-slate-500 mb-2">Filtrar por Pilar:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setPillarFilter('ALL')" data-val="ALL" class="pillar-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e3a8a] text-white transition">Todos</button>
+              <button onclick="setPillarFilter('Capacidad de pago')" data-val="Capacidad de pago" class="pillar-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border hover:bg-emerald-100 transition">Capacidad de pago</button>
+              <button onclick="setPillarFilter('Endeudamiento total')" data-val="Endeudamiento total" class="pillar-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-800 border hover:bg-blue-100 transition">Endeudamiento</button>
+              <button onclick="setPillarFilter('Historial')" data-val="Historial" class="pillar-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-800 border hover:bg-amber-100 transition">Historial</button>
+              <button onclick="setPillarFilter('Garantías')" data-val="Garantías" class="pillar-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-50 text-purple-800 border hover:bg-purple-100 transition">Garantías</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="infoCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- DIAPOSITIVA 5: 5. JUEGO AL AZAR (40 ALUMNOS)                            -->
+    <!-- ======================================================================= -->
+    <section id="slide-4" class="slide-panel space-y-6">
+      <div class="bg-gradient-to-r from-[#0f172a] via-[#1e3a8a] to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30">
+            🎲 Dinámica Final en Clase
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black mt-1.5">Ruleta al Azar (40 Alumnos) + Preguntas de Repaso</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <div class="bg-white/10 border border-white/15 rounded-xl px-4 py-2 text-center">
+            <div class="text-[11px] uppercase text-sky-200 font-bold">Respondidas</div>
+            <div id="scoreTotal" class="text-xl font-mono font-black text-white">0</div>
+          </div>
+          <div class="bg-white/10 border border-white/15 rounded-xl px-4 py-2 text-center">
+            <div class="text-[11px] uppercase text-emerald-300 font-bold">Aciertos</div>
+            <div id="scoreHits" class="text-xl font-mono font-black text-emerald-400">0</div>
+          </div>
+          <div class="bg-white/10 border border-white/15 rounded-xl px-4 py-2 text-center">
+            <div class="text-[11px] uppercase text-amber-300 font-bold">Participaron</div>
+            <div id="scoreStudents" class="text-xl font-mono font-black text-amber-300">0 / 40</div>
+          </div>
+          <button onclick="toggleSound()" id="soundToggleBtn" class="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold flex items-center gap-1.5 transition">
+            <span id="soundIcon">🔊</span>
+            <span id="soundText">Sonido ON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-5 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-extrabold text-slate-900">1. Sorteo de Alumno (1 al 40)</h3>
+            <button onclick="toggleEditNamesModal()" class="text-xs font-bold text-[#1e3a8a] hover:underline">✏️ Editar nombres</button>
+          </div>
+          <div id="rouletteBox" class="bg-gradient-to-b from-slate-900 to-[#1e3a8a] rounded-2xl p-6 text-center text-white shadow-inner border-4 border-amber-400/80 relative overflow-hidden">
+            <div class="text-xs font-bold uppercase tracking-widest text-amber-300">Alumno Seleccionado</div>
+            <div id="rouletteNumber" class="text-6xl sm:text-7xl font-mono font-black my-2 text-white tracking-tight">?</div>
+            <div id="rouletteName" class="text-base sm:text-lg font-bold text-sky-200">Presiona el botón para sortear</div>
+          </div>
+          <button id="spinBtn" onclick="startRouletteAndQuestion()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-base sm:text-lg shadow-lg transition transform active:scale-98 flex items-center justify-center gap-2.5 cursor-pointer">
+            <span>🎲 Sortear Alumno y Pregunta</span>
+          </button>
+          <div class="pt-3 border-t border-slate-200 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <label class="inline-flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
+                <input type="checkbox" id="noRepeatCheck" checked class="rounded text-[#1e3a8a]" />
+                <span>No repetir alumnos ya sorteados</span>
+              </label>
+              <button onclick="resetStudentsList()" class="text-xs font-bold text-red-600 hover:underline">Reiniciar (40)</button>
+            </div>
+            <div>
+              <div class="text-[11px] font-semibold text-slate-500 mb-1.5">Estado del salón:</div>
+              <div id="studentsGrid" class="grid grid-cols-10 gap-1"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-4">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-extrabold text-slate-900">2. Pregunta de la Exposición</h3>
+              <span id="qDifficultyBadge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-100 text-[#1e3a8a]">Listo para jugar</span>
+            </div>
+            <button onclick="pickRandomQuestion()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition">🔄 Cambiar Pregunta</button>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+            <div id="qTopicTag" class="text-xs font-bold uppercase tracking-wider text-[#1e3a8a] mb-1">Tema: Clasificación Crediticia SBS</div>
+            <p id="questionText" class="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">
+              Haz clic en "🎲 Sortear Alumno y Pregunta" para elegir un estudiante al azar.
+            </p>
+          </div>
+          <div id="optionsContainer" class="grid grid-cols-1 gap-3"></div>
+          <div id="feedbackBox" class="hidden rounded-2xl p-5 border-2 space-y-2">
+            <div id="feedbackTitle" class="text-base sm:text-lg font-black"></div>
+            <p id="feedbackExplain" class="text-xs sm:text-sm leading-relaxed"></p>
+            <div class="pt-2">
+              <button onclick="startRouletteAndQuestion()" class="px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-[#1e3a8a] text-white text-xs sm:text-sm font-bold transition">
+                Siguiente Ronda (Nuevo Alumno y Pregunta) →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL NOMBRES -->
+  <div id="namesModal" class="hidden fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-extrabold text-slate-900">Lista de 40 Alumnos</h3>
+        <button onclick="toggleEditNamesModal()" class="text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+      </div>
+      <textarea id="namesTextarea" rows="8" class="w-full rounded-xl border border-slate-300 p-3 text-xs font-mono"></textarea>
+      <div class="flex items-center justify-end gap-2">
+        <button onclick="restoreDefaultNames()" class="px-3.5 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-700">Restaurar N° 1 al 40</button>
+        <button onclick="saveCustomNames()" class="px-4 py-2 rounded-xl bg-[#1e3a8a] text-xs font-bold text-white">Guardar lista</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="bg-white border-t border-slate-200 py-3 px-4 sm:px-6 sticky bottom-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <button id="btnPrev" onclick="prevSlide()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40 transition">← Anterior</button>
+      <div class="text-center">
+        <div id="footerSlideInfo" class="text-xs sm:text-sm font-extrabold text-slate-900">Diapositiva 1 / 5 • Tabla de Categorías</div>
+      </div>
+      <button id="btnNext" onclick="nextSlide()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#0f172a] text-white hover:bg-[#1e3a8a] disabled:opacity-40 transition">Siguiente →</button>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT COMPLETO Y CORREGIDO -->
+  <script>
+    let currentSlide = 0;
+    const totalSlides = 5;
+    const slideNames = [
+      '1. Tabla de Categorías',
+      '2. Clasificación por Perfil',
+      '3. Consolidado (Rosa Delgado)',
+      '4. Info Adicional (Evaluación)',
+      '5. Juego al Azar (40 Alumnos)'
+    ];
+
+    function goToSlide(index) {
+      if (index < 0 || index >= totalSlides) return;
+      currentSlide = index;
+
+      for (let i = 0; i < totalSlides; i++) {
+        const panel = document.getElementById(`slide-${i}`);
+        const tab = document.getElementById(`tab-${i}`);
+        if (i === currentSlide) {
+          panel.classList.add('active');
+          tab.className = i === 4 
+            ? 'nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-amber-400 text-slate-950 shadow'
+            : 'nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold whitespace-nowrap transition bg-white text-[#0f172a] shadow';
+        } else {
+          panel.classList.remove('active');
+          tab.className = i === 4
+            ? 'nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition bg-amber-500/20 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30'
+            : 'nav-tab px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-slate-800/90 text-slate-200 hover:bg-slate-700';
+        }
+      }
+
+      const pct = ((currentSlide + 1) / totalSlides) * 100;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      document.getElementById('slideCounterTop').textContent = `${currentSlide + 1} / ${totalSlides}`;
+      document.getElementById('slideCounterTopMobile').textContent = `${currentSlide + 1} / ${totalSlides}`;
+      document.getElementById('footerSlideInfo').textContent = `Diapositiva ${currentSlide + 1} / ${totalSlides} • ${slideNames[currentSlide]}`;
+
+      document.getElementById('btnPrev').disabled = currentSlide === 0;
+      document.getElementById('btnNext').disabled = currentSlide === totalSlides - 1;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextSlide() { if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1); }
+    function prevSlide() { if (currentSlide > 0) goToSlide(currentSlide - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+
+    // SIMULADOR
+    const creditToGroup = {
+      'Corporativo': 'No minorista', 'Gran empresa': 'No minorista', 'Mediana empresa': 'No minorista',
+      'Pequeña empresa': 'Minorista', 'Microempresa': 'Minorista', 'Consumo revolvente': 'Minorista',
+      'Consumo no revolvente': 'Minorista', 'Hipotecario para vivienda': 'Hipotecario'
+    };
+    const limitsByGroup = {
+      'No minorista': { normal: 15, cpp: 60, deficiente: 120, dudoso: 365 },
+      'Minorista':    { normal: 8,  cpp: 30, deficiente: 60,  dudoso: 120 },
+      'Hipotecario':  { normal: 30, cpp: 60, deficiente: 120, dudoso: 365 }
+    };
+
+    function syncSimInputs(source) {
+      const slider = document.getElementById('simDaysSlider');
+      const num = document.getElementById('simDays');
+      if (source === 'slider') { num.value = slider.value; }
+      else {
+        let v = parseInt(num.value, 10);
+        if (isNaN(v) || v < 0) v = 0;
+        slider.value = Math.min(v, 400);
+      }
+      runSimulator();
+    }
+
+    function runSimulator() {
+      const type = document.getElementById('simCreditType').value;
+      let days = parseInt(document.getElementById('simDays').value, 10);
+      if (isNaN(days) || days < 0) days = 0;
+
+      document.getElementById('simDaysBadge').textContent = `${days} días`;
+      const group = creditToGroup[type];
+      const lim = limitsByGroup[group];
+
+      let label = '', badge = '', explain = '';
+      if (days <= lim.normal) {
+        label = 'Normal (0)'; badge = 'bg-emerald-500 text-white';
+        explain = `En ${group}, hasta ${lim.normal} días de atraso se mantiene en Normal (Código 0).`;
+      } else if (days <= lim.cpp) {
+        label = 'CPP (1)'; badge = 'bg-amber-400 text-slate-950';
+        explain = `En ${group}, entre ${lim.normal + 1} y ${lim.cpp} días corresponde CPP (Código 1).`;
+      } else if (days <= lim.deficiente) {
+        label = 'Deficiente (2)'; badge = 'bg-orange-500 text-white';
+        explain = `En ${group}, entre ${lim.cpp + 1} y ${lim.deficiente} días corresponde Deficiente (Código 2).`;
+      } else if (days <= lim.dudoso) {
+        label = 'Dudoso (3)'; badge = 'bg-red-600 text-white';
+        explain = `En ${group}, entre ${lim.deficiente + 1} y ${lim.dudoso} días corresponde Dudoso (Código 3).`;
+      } else {
+        label = 'Pérdida (4)'; badge = 'bg-rose-950 text-rose-100 border border-rose-400';
+        explain = `Superó el límite de ${lim.dudoso} días, cae en Pérdida (Código 4).`;
+      }
+
+      document.getElementById('simGroupOut').textContent = group;
+      document.getElementById('simCatOut').innerHTML = `<span class="px-3 py-1 rounded-full text-sm font-extrabold ${badge}">${label}</span>`;
+      document.getElementById('simSimpleExplain').textContent = explain;
+    }
+
+    // INFO ADICIONAL
+    const infoAdicionalItems = [
+      { perfilKey: 'Perfil 1', perfilTitle: '1. Constructora Andina S.A.C.', sub: 'Gran empresa • No minorista', doc: 'Estados financieros auditados y flujo de caja proyectado', uso: 'Comprobar si genera dinero suficiente para pagar sus cuotas.', pilar: 'Capacidad de pago' },
+      { perfilKey: 'Perfil 1', perfilTitle: '1. Constructora Andina S.A.C.', sub: 'Gran empresa • No minorista', doc: 'Cartera de obras vigentes y contratos firmados', uso: 'Verificar proyectos activos y explicar el atraso de 5 días.', pilar: 'Historial' },
+      { perfilKey: 'Perfil 1', perfilTitle: '1. Constructora Andina S.A.C.', sub: 'Gran empresa • No minorista', doc: 'Reporte consolidado de deudas en todos los bancos', uso: 'Saber cuánto debe en total en el sistema financiero.', pilar: 'Endeudamiento total' },
+      { perfilKey: 'Perfil 1', perfilTitle: '1. Constructora Andina S.A.C.', sub: 'Gran empresa • No minorista', doc: 'Tasación vigente de inmuebles y fianzas', uso: 'Medir respaldo patrimonial en caso de impago.', pilar: 'Garantías' },
+      { perfilKey: 'Perfil 2', perfilTitle: '2. Bodega La Esperanza E.I.R.L.', sub: 'Microempresa • Minorista', doc: 'Visita de campo y cuaderno de ventas diarias', uso: 'Confirmar cuánto vende realmente cada día.', pilar: 'Capacidad de pago' },
+      { perfilKey: 'Perfil 2', perfilTitle: '2. Bodega La Esperanza E.I.R.L.', sub: 'Microempresa • Minorista', doc: 'Separación de finanzas negocio-hogar', uso: 'Evitar que retire dinero de la caja para gastos personales.', pilar: 'Capacidad de pago' },
+      { perfilKey: 'Perfil 2', perfilTitle: '2. Bodega La Esperanza E.I.R.L.', sub: 'Microempresa • Minorista', doc: 'Reporte de deudas en cajas y proveedores', uso: 'Detectar préstamos paralelos y analizar por qué llegó a 45 días.', pilar: 'Endeudamiento total' },
+      { perfilKey: 'Perfil 2', perfilTitle: '2. Bodega La Esperanza E.I.R.L.', sub: 'Microempresa • Minorista', doc: 'Inventario de mercadería y aval solidario', uso: 'Contar con respaldo físico y compromiso personal.', pilar: 'Garantías' },
+      { perfilKey: 'Perfil 3', perfilTitle: '3. Carlos Injante Paredes', sub: 'Tarjeta de crédito • Minorista', doc: 'Boletas de pago actuales y constancia laboral', uso: 'Verificar si sigue trabajando y cuánto gana neto al mes.', pilar: 'Capacidad de pago' },
+      { perfilKey: 'Perfil 3', perfilTitle: '3. Carlos Injante Paredes', sub: 'Tarjeta de crédito • Minorista', doc: 'Líneas usadas y líneas no usadas en otras tarjetas', uso: 'Medir riesgo de sobreendeudamiento con líneas disponibles.', pilar: 'Endeudamiento total' },
+      { perfilKey: 'Perfil 3', perfilTitle: '3. Carlos Injante Paredes', sub: 'Tarjeta de crédito • Minorista', doc: 'Historial de pagos mínimos (ruleteo)', uso: 'Ver si pagaba solo el mínimo y motivos del atraso de 95 días.', pilar: 'Historial' },
+      { perfilKey: 'Perfil 3', perfilTitle: '3. Carlos Injante Paredes', sub: 'Tarjeta de crédito • Minorista', doc: 'Verificación de ausencia de garantías (sola firma)', uso: 'Confirmar que no tiene garantía real, exigiendo mayores provisiones.', pilar: 'Garantías' },
+      { perfilKey: 'Perfil 4', perfilTitle: '4. Rosa Delgado Huamán', sub: 'Multicrédito • Dudoso (3)', doc: 'Ingresos y gastos del hogar actualizados', uso: 'Entender por qué su tarjeta está al día pero su hipoteca venció.', pilar: 'Capacidad de pago' },
+      { perfilKey: 'Perfil 4', perfilTitle: '4. Rosa Delgado Huamán', sub: 'Multicrédito • Dudoso (3)', doc: 'Detalle consolidado de sus 3 deudas', uso: 'Confirmar regla del 20% y porcentaje del crédito hipotecario.', pilar: 'Endeudamiento total' },
+      { perfilKey: 'Perfil 4', perfilTitle: '4. Rosa Delgado Huamán', sub: 'Multicrédito • Dudoso (3)', doc: 'Cronograma histórico y motivo de atraso hipotecario', uso: 'Determinar si el atraso fue temporal o permanente.', pilar: 'Historial' },
+      { perfilKey: 'Perfil 4', perfilTitle: '4. Rosa Delgado Huamán', sub: 'Multicrédito • Dudoso (3)', doc: 'Tasación actualizada del inmueble hipotecado', uso: 'Conocer el valor comercial de la vivienda que respalda el crédito.', pilar: 'Garantías' }
+    ];
+
+    let currentProfFilter = 'ALL';
+    let currentPillarFilter = 'ALL';
+
+    function getPillarStyle(pilar) {
+      if (pilar === 'Capacidad de pago') return 'bg-emerald-100 text-[#059669] border-emerald-300';
+      if (pilar === 'Endeudamiento total') return 'bg-blue-100 text-[#1e3a8a] border-blue-300';
+      if (pilar === 'Historial') return 'bg-amber-100 text-[#d97706] border-amber-300';
+      return 'bg-purple-100 text-purple-800 border-purple-300';
+    }
+
+    function renderInfoCards() {
+      const grid = document.getElementById('infoCardsGrid');
+      const filtered = infoAdicionalItems.filter(item => {
+        const okProf = currentProfFilter === 'ALL' || item.perfilKey === currentProfFilter;
+        const okPil = currentPillarFilter === 'ALL' || item.pilar === currentPillarFilter;
+        return okProf && okPil;
+      });
+
+      document.getElementById('infoCounterBadge').textContent = `Mostrando ${filtered.length} de ${infoAdicionalItems.length} puntos`;
+
+      grid.innerHTML = filtered.map(item => `
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:border-blue-300 transition flex flex-col justify-between gap-3">
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <div class="text-xs font-extrabold text-[#1e3a8a]">${item.perfilTitle}</div>
+                <div class="text-[11px] text-slate-500">${item.sub}</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold border shrink-0 ${getPillarStyle(item.pilar)}">${item.pilar}</span>
+            </div>
+            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mt-2">📄 ${item.doc}</h4>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed">
+            <strong class="text-slate-800">¿Para qué sirve?:</strong> ${item.uso}
+          </p>
+        </div>
+      `).join('');
+    }
+
+    function setProfileFilter(val) {
+      currentProfFilter = val;
+      document.querySelectorAll('.prof-btn').forEach(btn => {
+        btn.className = btn.dataset.val === val
+          ? 'prof-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e3a8a] text-white transition'
+          : 'prof-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      });
+      renderInfoCards();
+    }
+
+    function setPillarFilter(val) {
+      currentPillarFilter = val;
+      document.querySelectorAll('.pillar-btn').forEach(btn => {
+        btn.className = btn.dataset.val === val
+          ? 'pillar-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1e3a8a] text-white transition'
+          : 'pillar-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition';
+      });
+      renderInfoCards();
+    }
+
+    function resetInfoFilters() { setProfileFilter('ALL'); setPillarFilter('ALL'); }
+
+    // JUEGO / RULETA
+    let studentNames = Array.from({ length: 40 }, (_, i) => `Alumno N° ${i + 1}`);
+    let participatedSet = new Set();
+    let totalAnswered = 0, totalHits = 0;
+    let currentQuestion = null, questionAnswered = false;
+    let usedQuestionIndexes = new Set();
+
+    const quizQuestions = [
+      { q: 'En un crédito Minorista, ¿hasta cuántos días de atraso sigues en Normal (0)?', options: ['Hasta 8 días', 'Hasta 15 días', 'Hasta 30 días', 'Hasta 60 días'], correct: 0, explain: 'En créditos Minoristas la tolerancia máxima para la categoría Normal (0) es de 0 a 8 días.' },
+      { q: '¿Cuál es el rango de atraso para que un crédito Hipotecario de vivienda sea Normal (0)?', options: ['0 a 8 días', '0 a 15 días', '0 a 30 días', '0 a 60 días'], correct: 2, explain: 'En créditos Hipotecarios para vivienda, el plazo para seguir en Normal (0) es de 0 a 30 días.' },
+      { q: '¿Qué significan las siglas "CPP" (Código 1) en la SBS?', options: ['Crédito Pagado Puntualmente', 'Con Problemas Potenciales', 'Cliente Para Préstamo', 'Cuenta Por Pagar'], correct: 1, explain: 'CPP significa "Con Problemas Potenciales" (Código 1).' },
+      { q: 'En crédito Minorista, ¿a partir de cuántos días caes en Pérdida (Código 4)?', options: ['Más de 60 días', 'Más de 90 días', 'Más de 120 días', 'Más de 365 días'], correct: 2, explain: 'Para créditos Minoristas, el tope de Dudoso es 120 días; más de 120 días cae en Pérdida.' },
+      { q: '¿En qué grupo se ubica un crédito a una "Microempresa"?', options: ['No minorista', 'Minorista', 'Hipotecario', 'Corporativo'], correct: 1, explain: 'Microempresa y pequeña empresa pertenecen al grupo Minorista.' },
+      { q: 'Constructora Andina (Gran empresa) tiene 5 días de atraso. ¿Por qué sigue Normal (0)?', options: ['Nunca pagan mora', 'Se evalúa su flujo de caja y 5 días no llegan al límite de 15 días para CPP', 'Tiene menos de 30 días', 'Su deuda es menor a S/ 100'], correct: 1, explain: 'En No minoristas lo principal es el flujo de caja, y 5 días no superan los 15 días de referencia.' },
+      { q: 'Bodega La Esperanza (Microempresa) tiene 45 días de atraso. ¿Qué categoría le corresponde?', options: ['CPP (1)', 'Deficiente (2)', 'Dudoso (3)', 'Pérdida (4)'], correct: 1, explain: 'En Minorista, de 31 a 60 días de atraso es Deficiente (Código 2).' },
+      { q: 'Rosa Delgado tiene tarjeta al día (0), préstamo en CPP (1) y hipoteca en Dudoso (3). ¿Clasificación final?', options: ['Normal (0)', 'CPP (1)', 'Dudoso (3)', 'Deficiente (2)'], correct: 2, explain: 'Por la regla del mayor riesgo (arrastre), prevalece el peor código: Dudoso (3).' }
+    ];
+
+    function initStudentsGrid() {
+      const grid = document.getElementById('studentsGrid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 40; i++) {
+        const btn = document.createElement('button');
+        btn.id = `std-cell-${i}`;
+        btn.className = 'w-full aspect-square rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 hover:bg-blue-100 transition';
+        btn.textContent = i;
+        btn.onclick = () => {
+          if (participatedSet.has(i)) participatedSet.delete(i);
+          else participatedSet.add(i);
+          updateStudentsGridUI();
+        };
+        grid.appendChild(btn);
+      }
+      updateStudentsGridUI();
+    }
+
+    function updateStudentsGridUI() {
+      for (let i = 1; i <= 40; i++) {
+        const cell = document.getElementById(`std-cell-${i}`);
+        if (!cell) continue;
+        if (participatedSet.has(i)) {
+          cell.className = 'w-full aspect-square rounded text-[10px] font-mono font-bold bg-emerald-500 text-white';
+        } else {
+          cell.className = 'w-full aspect-square rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 hover:bg-blue-100 transition';
+        }
+      }
+      document.getElementById('scoreStudents').textContent = `${participatedSet.size} / 40`;
+    }
+
+    function startRouletteAndQuestion() {
+      const noRep = document.getElementById('noRepeatCheck').checked;
+      let available = [];
+      for (let i = 1; i <= 40; i++) {
+        if (!noRep || !participatedSet.has(i)) available.push(i);
+      }
+      if (available.length === 0) {
+        alert('¡Ya participaron todos los alumnos! Reiniciando lista.');
+        participatedSet.clear();
+        available = Array.from({ length: 40 }, (_, i) => i + 1);
+      }
+
+      const numBox = document.getElementById('rouletteNumber');
+      const nameBox = document.getElementById('rouletteName');
+      let counter = 0;
+      const interval = setInterval(() => {
+        const randNum = available[Math.floor(Math.random() * available.length)];
+        numBox.textContent = `#${randNum}`;
+        nameBox.textContent = studentNames[randNum - 1];
+        counter++;
+        if (counter > 15) {
+          clearInterval(interval);
+          const finalNum = available[Math.floor(Math.random() * available.length)];
+          numBox.textContent = `#${finalNum}`;
+          nameBox.textContent = studentNames[finalNum - 1];
+          participatedSet.add(finalNum);
+          updateStudentsGridUI();
+          pickRandomQuestion();
+        }
+      }, 70);
+    }
+
+    function pickRandomQuestion() {
+      if (usedQuestionIndexes.size >= quizQuestions.length) usedQuestionIndexes.clear();
+      let idx;
+      do {
+        idx = Math.floor(Math.random() * quizQuestions.length);
+      } while (usedQuestionIndexes.has(idx));
+      usedQuestionIndexes.add(idx);
+
+      currentQuestion = quizQuestions[idx];
+      questionAnswered = false;
+      document.getElementById('questionText').textContent = currentQuestion.q;
+      document.getElementById('feedbackBox').classList.add('hidden');
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+      currentQuestion.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-300 text-xs sm:text-sm font-semibold text-slate-800 transition flex items-center gap-3';
+        btn.innerHTML = `<span class="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 font-bold flex items-center justify-center shrink-0">${['A','B','C','D'][i]}</span><span>${opt}</span>`;
+        btn.onclick = () => checkAnswer(i, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedIdx, btnElement) {
+      if (questionAnswered) return;
+      questionAnswered = true;
+      totalAnswered++;
+      document.getElementById('scoreTotal').textContent = totalAnswered;
+
+      const buttons = document.getElementById('optionsContainer').children;
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
+        if (i === currentQuestion.correct) {
+          buttons[i].className = 'w-full text-left p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-xs sm:text-sm font-bold text-emerald-900 flex items-center gap-3';
+        } else if (i === selectedIdx) {
+          buttons[i].className = 'w-full text-left p-3.5 rounded-xl border-2 border-red-500 bg-red-50 text-xs sm:text-sm font-bold text-red-900 flex items-center gap-3';
+        }
+      }
+
+      const fb = document.getElementById('feedbackBox');
+      const isCorrect = selectedIdx === currentQuestion.correct;
+      if (isCorrect) {
+        totalHits++;
+        document.getElementById('scoreHits').textContent = totalHits;
+        fb.className = 'rounded-2xl p-5 border-2 border-emerald-400 bg-emerald-50 space-y-2';
+        document.getElementById('feedbackTitle').textContent = '🎉 ¡Respuesta Correcta!';
+        document.getElementById('feedbackTitle').className = 'text-base sm:text-lg font-black text-emerald-800';
+      } else {
+        fb.className = 'rounded-2xl p-5 border-2 border-amber-400 bg-amber-50 space-y-2';
+        document.getElementById('feedbackTitle').textContent = '⚠️ ¡Incorrecto!';
+        document.getElementById('feedbackTitle').className = 'text-base sm:text-lg font-black text-amber-900';
+      }
+      document.getElementById('feedbackExplain').textContent = currentQuestion.explain;
+      fb.classList.remove('hidden');
+    }
+
+    function toggleEditNamesModal() {
+      const modal = document.getElementById('namesModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        document.getElementById('namesTextarea').value = studentNames.join('\n');
+      }
+    }
+
+    function saveCustomNames() {
+      const text = document.getElementById('namesTextarea').value;
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      for (let i = 0; i < 40; i++) {
+        if (lines[i]) studentNames[i] = lines[i];
+      }
+      toggleEditNamesModal();
+    }
+
+    function restoreDefaultNames() {
+      studentNames = Array.from({ length: 40 }, (_, i) => `Alumno N° ${i + 1}`);
+      document.getElementById('namesTextarea').value = studentNames.join('\n');
+    }
+
+    function resetStudentsList() {
+      participatedSet.clear();
+      updateStudentsGridUI();
+      document.getElementById('rouletteNumber').textContent = '?';
+      document.getElementById('rouletteName').textContent = 'Lista reiniciada';
+    }
+
+    let soundEnabled = true;
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+      document.getElementById('soundText').textContent = soundEnabled ? 'Sonido ON' : 'Mute';
+    }
+
+    // Inicialización al cargar la página
+    window.onload = () => {
+      goToSlide(0);
+      renderInfoCards();
+      initStudentsGrid();
+    };
+  </script>
+</body>
+</html>
